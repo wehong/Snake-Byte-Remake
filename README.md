@@ -1,5 +1,5 @@
 # Snake-Byte-Remake
-a simple Pygame game that mimic the old Apple II 'Snake Byte' game
+a simple Pygame game that mimic the old Apple II game, 'Snake Byte'
 ![Screenshot](./sbr_img.png)
 
 * All graphic images in this program are original
