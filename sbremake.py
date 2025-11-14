@@ -350,6 +350,7 @@ def gameover():
     ppsk_text_rect = ppsk_text.get_rect(center = (300, 360))
 
     score = 0
+    sc_tick = 0
 
     while in_gameover:
         for event in pygame.event.get():
