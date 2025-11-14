@@ -295,7 +295,7 @@ def game_init():
     b_img = pygame.image.load("images/block2.png")
 
     snd_move = pygame.mixer.Sound("sound/sharp.mp3")
-    snd_bite = pygame.mixer.Sound("Sound/chippy.mp3")
+    snd_bite = pygame.mixer.Sound("sound/chippy.mp3")
     snd_grow = pygame.mixer.Sound("sound/harsh.mp3")
     snd_hit = pygame.mixer.Sound("sound/movinghit.mp3")
 
