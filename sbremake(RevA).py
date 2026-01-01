@@ -6,11 +6,10 @@ global screen, clock, running, phase_num
 global s_img_ne, s_img_ns, s_img_nw, s_img_se, s_img_sw, s_img_we, s_img_hn, s_img_hs, s_img_hw, s_img_he, s_img_tn, s_img_ts, s_img_tw, s_img_te
 global f_img
 global b_img
-global snd_move, snd_bite, snd_grow, snd_hit, snd_open, snd_exit
+global snd_move, snd_bite, snd_grow, snd_hit
 
 global score, hiscore
-global point
-global sc_tick, timer_mill
+global sc_tick
 
 global player, prey, wall
 
@@ -235,7 +234,6 @@ class block:
     global b_img
     def __init__(self):
         self.pos = []
-        self.gate_open = False
     
     def make_bound_block(self):
         for i in range(0, 60):
@@ -244,17 +242,10 @@ class block:
             self.pos.append((0, i))
             self.pos.append((59, i))
     
-    def make_exit_hole(self):
-        self.pos.remove((30, 0))
-        self.gate_open = True
-
     def does_this_hit(self, x, y):
         if (x, y) in self.pos:
             return True
         return False
-
-    def does_this_open(self):
-        return self.gate_open
 
     def draw(self, screen):
         for (x, y) in self.pos:
@@ -262,12 +253,12 @@ class block:
 
 def game_init():
 
-    global phase_num, screen, clock, score, hiscore, point, running, sc_tick, timer_mill
+    global phase_num, screen, clock, score, hiscore, running, sc_tick
     global player, prey, wall
     global s_img_ne, s_img_ns, s_img_nw, s_img_se, s_img_sw, s_img_we, s_img_hn, s_img_hs, s_img_hw, s_img_he, s_img_tn, s_img_ts, s_img_tw, s_img_te
     global f_img
     global b_img
-    global snd_move, snd_bite, snd_grow, snd_hit, snd_open, snd_exit
+    global snd_move, snd_bite, snd_grow, snd_hit
 
     screen_width = 800
     screen_height = 600
@@ -279,7 +270,7 @@ def game_init():
     screen = pygame.display.set_mode((screen_width, screen_height))
     clock = pygame.time.Clock()
 
-    #score_font = pygame.font.Font(None, 30)
+    score_font = pygame.font.Font(None, 30)
 
     running = True
     phase_num = 1
@@ -307,12 +298,9 @@ def game_init():
     snd_bite = pygame.mixer.Sound("sound/chippy.mp3")
     snd_grow = pygame.mixer.Sound("sound/harsh.mp3")
     snd_hit = pygame.mixer.Sound("sound/movinghit.mp3")
-    snd_open = pygame.mixer.Sound("sound/moving.mp3")
-    snd_exit = pygame.mixer.Sound("sound/unique.mp3")
 
-    score = hiscore = point = 0
+    score = hiscore = 0
     sc_tick = 5
-    timer_mill = 200
 
 
 def title():
@@ -349,22 +337,20 @@ def title():
 
 def gameover():
     global screen, clock, phase_num
-    global score, point, sc_tick, timer_mill
+    global score
 
     in_gameover = True
 
     pgameover_font = pygame.font.Font(None, 28)
     pgameover_text = pgameover_font.render('Game Over', True, (255, 255, 55))
-    pgameover_text_rect = pgameover_text.get_rect(center = (300, 240))
+    pgameover_text_rect = pgameover_text.get_rect(center = (300, 300))
 
     ppsk_font = pygame.font.Font(None, 20)
     ppsk_text = ppsk_font.render('Press Space key to restart', True, (255, 255, 155))
     ppsk_text_rect = ppsk_text.get_rect(center = (300, 360))
 
     score = 0
-    point = 0
-    sc_tick = 5
-    timer_mill = 200
+    sc_tick = 0
 
     while in_gameover:
         for event in pygame.event.get():
@@ -382,9 +368,9 @@ def gameover():
 
 
 def stage():
-    global phase_num, screen, clock, score, hiscore, point, sc_tick, timer_mill
+    global phase_num, screen, clock, score, hiscore, sc_tick
     global player, prey, wall
-    global snd_move, snd_bite, snd_grow, snd_hit, snd_open, snd_exit
+    global snd_move, snd_bite, snd_grow, snd_hit
 
     player = snake(30,30)
     prey = fruit()
@@ -402,12 +388,8 @@ def stage():
     prey.random_drop(player)
     in_pause = False
     in_stage = True
-
-    TIMEREVENT = pygame.USEREVENT + 1
-    pygame.time.set_timer(TIMEREVENT, timer_mill)
-
-    inkey = 0
     while in_stage:
+        inkey = 0
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 in_stage = False
@@ -423,50 +405,35 @@ def stage():
                         for event in pygame.event.get():
                             if event.type == pygame.KEYDOWN:
                                 in_pause = False
-            elif event.type == TIMEREVENT:
-                if inkey == 1:
-                    if player.is_growing() == True:
-                        player.grow_left()
-                        snd_grow.play()
-                    else:
-                        player.move_left()
-                        snd_move.play()
-                    inkey = 0
-                elif inkey == 2:
-                    if player.is_growing() == True:
-                        player.grow_right()
-                        snd_grow.play()
-                    else:
-                        player.move_right()
-                        snd_move.play()
-                    inkey = 0
-                else:
-                    if player.is_growing() == True:
-                        player.grow_forward()
-                        snd_grow.play()
-                    else:     
-                        player.move_forward()
-                        snd_move.play()
-                    inkey = 0
-        if prey is not None:
-            if player.does_this_eat_fruit(prey.get_x(), prey.get_y()):
-                score += 10
-                snd_bite.play()
-                if point >= 9:
-                    prey = None
-                    wall.make_exit_hole()
-                    snd_open.play()
-                else:
-                    prey.random_drop(player)
-                player.set_grow_count(5)
-                point += 1
-                sc_tick += 1
-                if sc_tick > 60:
-                    sc_tick = 60
-                timer_mill -= 20
-                if timer_mill < 80:
-                    timer_mill = 80
-                pygame.time.set_timer(TIMEREVENT, timer_mill)
+        if inkey == 1:
+            if player.is_growing() == True:
+                player.grow_left()
+                snd_grow.play()
+            else:
+                player.move_left()
+                snd_move.play()
+        elif inkey == 2:
+            if player.is_growing() == True:
+                player.grow_right()
+                snd_grow.play()
+            else:
+                player.move_right()
+                snd_move.play()
+        else:
+            if player.is_growing() == True:
+                player.grow_forward()
+                snd_grow.play()
+            else:     
+                player.move_forward()
+                snd_move.play()
+        if player.does_this_eat_fruit(prey.get_x(), prey.get_y()):
+            score += 10
+            snd_bite.play()
+            prey.random_drop(player)
+            player.set_grow_count(5)
+            sc_tick += 1
+            if sc_tick > 60:
+                sc_tick = 60
         screen.fill("black")
         score_text = score_font.render(f'Score: {score}', True, (255, 255, 200))
         if score > hiscore:
@@ -475,8 +442,7 @@ def stage():
         screen.blit(hiscore_text, hiscore_rect)
         screen.blit(score_text, score_rect)
         wall.draw(screen)
-        if prey is not None:
-            prey.draw(screen)
+        prey.draw(screen)
         player.draw(screen)
         pygame.display.flip()
         if wall.does_this_hit(player.get_x(), player.get_y()):
@@ -485,21 +451,13 @@ def stage():
                 hiscore = score
             in_stage = False
             phase_num = 0
-            pygame.time.set_timer(TIMEREVENT, 0)
         if player.does_this_bite_itself() == True:
             snd_hit.play()
             if score > hiscore:
                 hiscore = score
             in_stage = False
             phase_num = 0
-            pygame.time.set_timer(TIMEREVENT, 0)
-        if wall.does_this_open() == True:
-            if player.get_x() == 30 and player.get_y() == 0:
-                snd_exit.play()
-                pygame.time.wait(2000)
-                in_stage = False
-                phase_num = 5
-        clock.tick(60)
+        clock.tick(sc_tick)
 
 
 def main():
@@ -517,7 +475,6 @@ def main():
         elif phase_num == 3:
             stage()
         elif phase_num == 4:
-            # next stage
             running = False
         else:
             running = False
